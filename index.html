@@ -1,273 +1,407 @@
-// Egg Grading — Best Case Scenario (Interactive Web Infographic)
-// Converted to Standalone Component with Embedded CSS and pure React.createElement calls.
-// This version is compatible with environments that do not have a JSX transpiler, like Looker Studio.
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Grading - Best Case Scenario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Styling */
+        :root {
+            --brand-blue: #2B74B5;
+            --brand-red: #C97D72;
+            --brand-green: #3FB2A5;
+            --brand-paper: #FAFCFE;
+            --slate-800: #1e293b;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--brand-paper);
+            color: var(--slate-800);
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Layout & Cards */
+        section {
+            padding: 1.5rem;
+            background-color: white;
+            margin-bottom: 1rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            padding: 1rem;
+        }
+        .grid { display: grid; gap: 1rem; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        @media (min-width: 768px) { .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (min-width: 1024px) { .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-import React, { useState, useEffect } from 'react';
+        /* Header */
+        .header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--slate-200);
+            background-color: white;
+        }
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--brand-blue);
+            margin: 0;
+        }
+        .header p {
+            margin: 0.25rem 0 0;
+            color: var(--slate-600);
+        }
+        .header .meta {
+            font-size: 0.875rem;
+            color: var(--slate-500);
+            margin-top: 0.5rem;
+        }
 
-// ===== Brand Palette (โทนสว่างขึ้น) =====
-const BRAND = {
-  blue: '#2B74B5',
-  redBrown: '#C97D72',
-  seaGreen: '#3FB2A5',
-  paper: '#FAFCFE'
-};
+        /* KPI Section */
+        #kpi-summary-grid .card {
+            border-left: 6px solid transparent;
+            transition: transform 0.2s ease;
+        }
+        #kpi-summary-grid .card:hover { transform: translateY(-5px); }
+        #kpi-summary-grid .base-case-card {
+            border-left-color: var(--brand-blue);
+            box-shadow: 0 0 0 2px var(--brand-blue);
+        }
+        .kpi-label { font-size: 0.875rem; color: var(--slate-500); }
+        .kpi-value { font-weight: 800; color: var(--brand-blue); }
+        .kpi-value.base-case-value { font-size: 2.25rem; }
+        .kpi-value.other-value { font-size: 1.875rem; }
+        .kpi-description { font-size: 0.875rem; color: var(--slate-500); margin-top: 0.25rem; }
+        
+        /* Section Titles */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: var(--brand-blue);
+        }
 
-// ===== DATA (No changes) =====
-const META = { period: 'ก.พ.–ส.ค. 2025', totalDays: 184, machine: 'Nabel Oracion 6000' };
-const kpiSummary = [
-  { label: 'Base Case (ฟอง/ชม.)', value: '36,000', description: 'เป้าหมายหลักที่แนะนำ' },
-  { label: 'Performance เฉลี่ย', value: '58.71%', description: 'ค่าเฉลี่ย 7 เดือน' },
-  { label: 'ผลผลิตเฉลี่ย (ฟอง/ชม.)', value: '35,237', description: 'ตลอดช่วงการวิเคราะห์' },
-  { label: 'โอกาสสำเร็จ (≥36k)', value: '43%', description: '79 จาก 184 วัน' },
-];
-const histogram = [
-  { range: '27k–29k', days: 6 }, { range: '29k–31k', days: 5 }, { range: '31k–33k', days: 36 },
-  { range: '33k–35k', days: 42 }, { range: '35k–37k', days: 49 }, { range: '37k–39k', days: 38 },
-  { range: '39k–41k', days: 8 },
-];
-const lossImpact = [
-  { range: '0 นาที', perf: '62.5%', production: '37,500' }, { range: '1–15 นาที', perf: '60.2%', production: '36,120' },
-  { range: '16–30 นาที', perf: '58.8%', production: '35,280' }, { range: '31–60 นาที', perf: '56.4%', production: '33,840' },
-  { range: '> 60 นาที', perf: '52.1%', production: '31,260' },
-];
-const basicStats = [
-  { k: 'Minimum (ต่ำสุด)', v: '27,450' }, { k: 'Q1 (25%)', v: '33,291' }, { k: 'Median (50%)', v: '35,432' },
-  { k: 'Mean (ค่าเฉลี่ย)', v: '35,237' }, { k: 'Q3 (75%)', v: '37,234' }, { k: 'Maximum (สูงสุด)', v: '40,920' },
-];
-const scenarios = [
-  { title: 'Base Case (มาตรฐาน)', target: '36,000', condition: 'เล้าไข่ครบ • Loss < 20 นาที', risk: 'ต่ำ', action: 'รักษามาตรฐาน', evidence: '≥36k: 79/184 วัน (43%)', details: ['ใช้เป็นเป้าหมายหลักในวันทำงานปกติ', 'ทำได้แล้ว 43% ของวัน (79 จาก 184 วัน)', 'ลด Loss Time ต่อเนื่อง'] },
-  { title: 'ลดเล้าใหญ่ 1 เล้า', target: 'ลดลงตาม Supply', condition: 'ปริมาณไข่ลด (ปลดเล้าใหญ่)', risk: 'กลาง', action: 'ปรับเป้าหมายชั่วคราว', evidence: '—', details: ['สะท้อนข้อจำกัดด้าน Supply ชั่วคราว', 'วางแผนคืนสู่ Base Case ทันทีที่ Supply กลับมา'] },
-  { title: 'Loss > 30 นาที', target: '<34,000', condition: 'ขาดการบำรุง/เสียบ่อย', risk: 'สูง', action: 'บำรุง/แก้ระบบขนถาด', evidence: '—', details: ['ทำ Root-cause + PM เลนที่มีปัญหาซ้ำ', 'ย่น MTTR เพื่อลด Downtime'] },
-  { title: 'Excellent Day', target: '≥38,400', condition: 'No Loss • Input เต็ม', risk: 'โอกาส', action: 'ผลักดันศักยภาพ', evidence: '—', details: ['บันทึกวิธีปฏิบัติ/กำลังคนในวันที่ดีพิเศษ', 'ย้ำสภาพแวดล้อมที่เอื้อต่อ Zero Loss'] },
-];
-const baseCaseReasons = ['เป็นเลขกลม จำง่าย สื่อสารสะดวก', 'อยู่ระหว่าง Median (35,432) และ Mean+0.5×SD (~36,200)', 'ปัจจุบันทำได้แล้ว 43% ของวัน (79/184 วัน)', 'ยังมีช่องให้พัฒนาเพิ่มขึ้นอย่างมีเหตุผล'];
+        /* Lists and Tables */
+        ul.styled-list {
+            list-style-type: disc;
+            list-style-position: inside;
+            padding-left: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .data-table {
+            width: 100%;
+            font-size: 0.875rem;
+            border-collapse: collapse;
+        }
+        .data-table th, .data-table td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--slate-200);
+            text-align: left;
+        }
+        .data-table thead { background-color: var(--slate-100); }
+        .data-table th { font-weight: 600; }
+        .data-table .text-center { text-align: center; }
+        .data-table .text-right { text-align: right; }
+        .table-container { overflow-x: auto; }
 
-// ===== Helpers (No changes) =====
-const BAR_MAX_PX = 170, BAR_MIN_PX = 5;
-function computeBarPx(days, max) {
-  const safeMax = Math.max(1, max | 0);
-  const ratio = Math.max(0, days) / safeMax;
-  return Math.round(ratio * BAR_MAX_PX) + BAR_MIN_PX;
-}
+        /* Histogram */
+        .histogram-container { display: flex; align-items: flex-end; gap: 0.75rem; height: 224px; border: 1px solid var(--slate-100); border-radius: 0.25rem; padding: 1rem; }
+        .bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .bar-label { font-size: 0.75rem; color: var(--slate-600); margin-bottom: 0.25rem; }
+        .bar { width: 100%; border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem; background: var(--brand-blue); box-shadow: inset 0 -2px 0 rgba(255,255,255,.4); transition: background-color 0.2s; }
+        .bar:hover { background-color: var(--brand-green); }
+        .range-label { font-size: 0.75rem; color: var(--slate-800); margin-top: 0.25rem; }
+        .histogram-footer-text { font-size: 0.875rem; color: var(--slate-600); margin-top: 0.5rem; }
 
-// ===== Embedded CSS Styles Component =====
-const EmbeddedStyles = () => {
-    return React.createElement('style', null, `
-    /* General Layout */
-    .infographic-container { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #1e293b; background-color: #f8fafc; }
-    .infographic-header { background-color: white; padding: 2rem; border-bottom: 1px solid #e2e8f0; }
-    .infographic-main { padding: 1rem; }
-    @media (min-width: 768px) { .infographic-main { padding: 2rem; } }
-    .main-content-wrapper { display: flex; flex-direction: column; gap: 2rem; }
+        /* Scenario Table */
+        #scenario-table tbody tr { cursor: pointer; transition: background-color 0.2s; }
+        #scenario-table tbody tr:hover { background-color: #eff6ff; }
+        .base-case-row { background-color: var(--slate-100); font-weight: 700; }
 
-    /* Typography */
-    .header-title { font-size: 2.25rem; font-weight: 800; color: ${BRAND.blue}; }
-    .header-subtitle { font-size: 1.125rem; color: #475569; margin-top: 0.5rem; }
-    .header-meta { font-size: 0.875rem; color: #64748b; margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.75rem; }
-    .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #1e293b; }
-    .font-semibold { font-weight: 600; }
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            max-width: 500px;
+            width: 90%;
+            padding: 1.5rem;
+        }
+        .modal-title { margin-top: 0; font-size: 1.125rem; font-weight: 600; color: var(--brand-blue); }
+        .modal-body { font-size: 0.875rem; color: var(--slate-600); }
+        .modal-button {
+            margin-top: 1rem;
+            padding: 0.25rem 1rem;
+            border-radius: 0.25rem;
+            border: none;
+            background-color: var(--slate-200);
+            cursor: pointer;
+        }
+        .modal-button:hover { background-color: #d1d5db; }
+    </style>
+</head>
+<body>
 
-    /* Grid & Cards */
-    .grid-container { display: grid; gap: 1.5rem; }
-    .grid-cols-4 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    @media (min-width: 640px) { .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (min-width: 1024px) { .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-    .grid-cols-5 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    @media (min-width: 1024px) { .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } .grid-span-2 { grid-column: span 2; } .grid-span-3 { grid-column: span 3; } }
-    .grid-cols-2 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-    @media (min-width: 1024px) { .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 id="header-title"></h1>
+            <p id="header-subtitle"></p>
+            <div id="header-meta" class="meta"></div>
+        </header>
 
-    .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); padding: 1.5rem; border: 1px solid #e2e8f0; }
+        <!-- KPI Summary -->
+        <main style="padding: 1.5rem; background-color: var(--brand-paper);">
+            <div id="kpi-summary-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"></div>
+            
+            <!-- Reasons -->
+            <section>
+                <h2 class="section-title">เหตุผลที่เลือก Base Case 36,000 ฟอง/ชั่วโมง</h2>
+                <ul id="base-case-reasons-list" class="styled-list"></ul>
+            </section>
+            
+            <!-- Histogram & Stats -->
+            <div class="grid grid-cols-1 lg:grid-cols-2">
+                <div class="card">
+                    <h2 class="section-title">การกระจายผลผลิตต่อชั่วโมง (Histogram)</h2>
+                    <div id="histogram-chart" class="histogram-container"></div>
+                    <p class="histogram-footer-text">ช่วงที่เกิดบ่อยสุดคือ 35k–37k สนับสนุน Base Case 36k</p>
+                </div>
+                <div class="card">
+                    <h2 class="section-title">ค่าสถิติพื้นฐาน (ฟอง/ชั่วโมง)</h2>
+                    <div class="table-container">
+                        <table id="basic-stats-table" class="data-table"></table>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--slate-600); margin-top: 1rem;"><strong>การตีความ:</strong> Q1–Q3 (33,291–37,234) คือกรอบของวันทำงานส่วนใหญ่</p>
+                </div>
+            </div>
 
-    /* KPI Card Specifics */
-    .kpi-card { transition: transform 0.2s ease-out; }
-    .kpi-card:hover { transform: scale(1.05); }
-    .kpi-card-base { border-left: 8px solid ${BRAND.blue}; box-shadow: 0 0 0 2px white, 0 0 0 4px ${BRAND.blue}; }
-    .kpi-label { font-size: 0.875rem; font-weight: 500; color: #64748b; }
-    .kpi-value { font-weight: 900; letter-spacing: -0.05em; margin: 0.25rem 0; color: ${BRAND.blue}; }
-    .kpi-value-base { font-size: 3.75rem; }
-    .kpi-value-other { font-size: 2.25rem; }
-    .kpi-desc { font-size: 0.875rem; color: #475569; }
+            <!-- Loss Impact & Causes -->
+            <div class="grid grid-cols-1 lg:grid-cols-2" style="margin-top: 1rem;">
+                <section class="card" style="margin:0;">
+                    <h2 class="section-title">ผลกระทบของ Loss Time ต่อ Performance</h2>
+                    <div class="table-container">
+                        <table id="loss-impact-table" class="data-table"></table>
+                    </div>
+                </section>
+                <section class="card" style="margin:0;">
+                    <h2 class="section-title">สาเหตุหลักของ Loss</h2>
+                    <div class="table-container">
+                        <table id="loss-causes-table" class="data-table"></table>
+                    </div>
+                </section>
+            </div>
+            
+             <!-- Scenarios -->
+            <section style="margin-top: 1rem;">
+                <h2 class="section-title">Scenario & คำแนะนำ</h2>
+                <div class="table-container">
+                    <table id="scenario-table" class="data-table"></table>
+                </div>
+                <p style="font-size: 0.875rem; color: var(--slate-600); margin-top: 0.5rem;">คลิกแถวเพื่อดูรายละเอียดของสถานการณ์นั้น ๆ</p>
+            </section>
+        </main>
+    </div>
 
-    /* Reasons Card */
-    .reasons-list { list-style-type: decimal; list-style-position: inside; font-size: 1rem; display: flex; flex-direction: column; gap: 0.75rem; color: #334155; }
+    <!-- Modal -->
+    <div id="scenario-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" class="modal-title"></h3>
+            <p id="modal-body" class="modal-body"></p>
+            <p id="modal-evidence" style="font-size: 0.75rem; color: var(--slate-500); margin-top: 0.25rem;"></p>
+            <ul id="modal-details-list" class="styled-list" style="margin-top: 0.75rem;"></ul>
+            <button id="modal-close-btn" class="modal-button">ปิด</button>
+        </div>
+    </div>
 
-    /* Histogram */
-    .histogram-plot { display: flex; align-items: flex-end; gap: 0.75rem; height: 16rem; border-radius: 0.5rem; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; }
-    .histogram-bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
-    .histogram-bar-label { font-size: 0.875rem; font-weight: 700; color: #334155; margin-bottom: 0.25rem; opacity: 0; transition: opacity 0.2s; }
-    .histogram-bar-wrapper:hover .histogram-bar-label { opacity: 1; }
-    .histogram-bar { width: 100%; border-top-left-radius: 0.375rem; border-top-right-radius: 0.375rem; transition: all 0.3s ease-out; box-shadow: inset 0 -3px 0 rgba(255,255,255,.3); }
-    .histogram-range-label { font-size: 0.75rem; margin-top: 0.5rem; font-weight: 500; color: #475569; }
 
-    /* Tables */
-    .data-table { width: 100%; font-size: 1rem; border-collapse: collapse; }
-    .data-table th, .data-table td { padding: 0.75rem; }
-    .data-table thead { background-color: #f1f5f9; }
-    .data-table th { font-weight: 600; color: #334155; text-align: left; }
-    .data-table tbody tr { border-bottom: 1px solid #e2e8f0; }
-    .data-table .text-center { text-align: center; }
-    .data-table .text-right { text-align: right; }
-    .table-interpretation { font-size: 0.875rem; color: #475569; margin-top: 1rem; background-color: #f8fafc; padding: 0.75rem; border-radius: 0.5rem; }
+    <script>
+        // --- DATA (from React component) ---
+        const META = { period: 'ก.พ.–ส.ค. 2025', totalDays: 184, machine: 'Nabel Oracion 6000' };
+        const kpiSummary = [
+            { label: 'Base Case (ฟอง/ชม.)', value: '36,000', description: 'เป้าหมายหลักที่แนะนำ' },
+            { label: 'Performance เฉลี่ย', value: '58.71%', description: 'ค่าเฉลี่ย 7 เดือน' },
+            { label: 'ผลผลิตเฉลี่ย (ฟอง/ชม.)', value: '35,237', description: 'ตลอดช่วงการวิเคราะห์' },
+            { label: 'โอกาสสำเร็จ (≥36k)', value: '43%', description: '79 จาก 184 วัน' },
+        ];
+        const histogram = [
+            { range: '27k–29k', days: 6 }, { range: '29k–31k', days: 5 }, { range: '31k–33k', days: 36 },
+            { range: '33k–35k', days: 42 }, { range: '35k–37k', days: 49 }, { range: '37k–39k', days: 38 },
+            { range: '39k–41k', days: 8 },
+        ];
+        const lossImpact = [
+            { range: '0 นาที', perf: '62.5%', production: '37,500' }, { range: '1–15 นาที', perf: '60.2%', production: '36,120' },
+            { range: '16–30 นาที', perf: '58.8%', production: '35,280' }, { range: '31–60 นาที', perf: '56.4%', production: '33,840' },
+            { range: '> 60 นาที', perf: '52.1%', production: '31,260' },
+        ];
+        const basicStats = [
+            { k: 'Minimum (ต่ำสุด)', v: '27,450' }, { k: 'Q1 (25%)', v: '33,291' },
+            { k: 'Median (50%)', v: '35,432' }, { k: 'Mean (ค่าเฉลี่ย)', v: '35,237' },
+            { k: 'Q3 (75%)', v: '37,234' }, { k: 'Maximum (สูงสุด)', v: '40,920' },
+        ];
+        const lossCauses = [
+            { cause: 'ขนถาด', freq: '115 ครั้ง', percent: '91.3%' },
+            { cause: 'ปัญหาเลน 3,4,7', freq: '18 ครั้ง', percent: '14.3%' },
+            { cause: 'น็อต/Bucket หลุด', freq: '9 ครั้ง', percent: '7.1%' },
+        ];
+        const scenarios = [
+            { title: 'Base Case (มาตรฐาน)', target: '36,000', condition: 'เล้าไข่ครบ • Loss < 20 นาที', risk: 'ต่ำ', action: 'รักษามาตรฐาน', evidence: '≥36k: 79/184 วัน (43%)', details: ['ใช้เป็นเป้าหมายหลักในวันทำงานปกติ', 'ทำได้แล้ว 43% ของวัน (79 จาก 184 วัน)', 'ลด Loss Time ต่อเนื่อง'] },
+            { title: 'ลดเล้าใหญ่ 1 เล้า', target: 'ลดลงตาม Supply', condition: 'ปริมาณไข่ลด (ปลดเล้าใหญ่)', risk: 'กลาง', action: 'ปรับเป้าหมายชั่วคราว', evidence: '—', details: ['สะท้อนข้อจำกัดด้าน Supply ชั่วคราว', 'วางแผนคืนสู่ Base Case ทันทีที่ Supply กลับมา'] },
+            { title: 'Loss > 30 นาที', target: '<34,000', condition: 'ขาดการบำรุง/เสียบ่อย', risk: 'สูง', action: 'บำรุง/แก้ระบบขนถาด', evidence: '—', details: ['ทำ Root-cause + PM เลนที่มีปัญหาซ้ำ', 'ย่น MTTR เพื่อลด Downtime'] },
+            { title: 'Excellent Day', target: '≥38,400', condition: 'No Loss • Input เต็ม', risk: 'โอกาส', action: 'ผลักดันศักยภาพ', evidence: '—', details: ['บันทึกวิธีปฏิบัติ/กำลังคนในวันที่ดีพิเศษ', 'ย้ำสภาพแวดล้อมที่เอื้อต่อ Zero Loss'] },
+        ];
+        const baseCaseReasons = [
+            'เป็นเลขกลม จำง่าย สื่อสารสะดวก', 'อยู่ระหว่าง Median (35,432) และ Mean+0.5×SD (~36,200)',
+            'ปัจจุบันทำได้แล้ว 43% ของวัน (79/184 วัน)', 'ยังมีช่องให้พัฒนาเพิ่มขึ้นอย่างมีเหตุผล',
+        ];
 
-    /* Scenario Table Specifics */
-    .scenario-table tbody tr { cursor: pointer; transition: background-color 0.2s; }
-    .scenario-table tbody tr:hover { background-color: #eff6ff; }
-    .scenario-table-base-case { background-color: #dbeafe; font-weight: 700; }
+        // --- RENDER FUNCTIONS ---
+        function renderHeader() {
+            document.getElementById('header-title').textContent = 'นำเสนอ Best Case Scenario — การคัดไข่';
+            document.getElementById('header-subtitle').textContent = 'อธิบายตัวเลข Base Case ที่แนะนำ (36,000 ฟอง/ชม.) และเหตุผลเชิงข้อมูล';
+            document.getElementById('header-meta').textContent = `ช่วงข้อมูล: ${META.period} • ${META.totalDays} วัน • เครื่อง: ${META.machine}`;
+        }
 
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.6); padding: 1rem; }
-    .modal-content { background-color: white; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); max-width: 42rem; width: 100%; padding: 2rem; transform: scale(0.95); opacity: 0; animation: modal-fade-in 0.2s ease-out forwards; }
-    @keyframes modal-fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    .modal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: ${BRAND.blue}; }
-    .modal-body { font-size: 1rem; color: #334155; margin-bottom: 1rem; }
-    .modal-details-list { list-style-type: disc; list-style-position: inside; font-size: 1rem; display: flex; flex-direction: column; gap: 0.5rem; color: #1e293b; }
-    .modal-footer { text-align: right; margin-top: 1.5rem; }
-    .modal-close-button { padding: 0.5rem 1.5rem; border: none; cursor: pointer; border-radius: 0.5rem; background-color: #e2e8f0; color: #1e293b; font-weight: 600; transition: background-color 0.2s; }
-    .modal-close-button:hover { background-color: #cbd5e1; }
-  `);
-};
+        function renderKPIs() {
+            const grid = document.getElementById('kpi-summary-grid');
+            grid.innerHTML = kpiSummary.map((item, idx) => `
+                <div class="card ${idx === 0 ? 'base-case-card' : ''}">
+                    <div class="kpi-label">${item.label}</div>
+                    <div class="kpi-value ${idx === 0 ? 'base-case-value' : 'other-value'}">${item.value}</div>
+                    <div class="kpi-description">${item.description}</div>
+                </div>
+            `).join('');
+        }
+        
+        function renderBaseCaseReasons() {
+            const list = document.getElementById('base-case-reasons-list');
+            list.innerHTML = baseCaseReasons.map(reason => `<li>${reason}</li>`).join('');
+        }
 
-// ===== COMPONENTS (Converted to React.createElement) =====
+        function renderHistogram() {
+            const chartContainer = document.getElementById('histogram-chart');
+            const BAR_MAX_PX = 180, BAR_MIN_PX = 8;
+            const maxDays = Math.max(...histogram.map(h => h.days), 1);
 
-function ScenarioModal({ scenario, onClose }) {
-  if (!scenario) return null;
+            chartContainer.innerHTML = histogram.map(bin => {
+                const ratio = Math.max(0, bin.days) / maxDays;
+                const px = Math.round(ratio * BAR_MAX_PX) + BAR_MIN_PX;
+                return `
+                    <div class="bar-wrapper" title="${bin.range}: ${bin.days} วัน">
+                        <div class="bar-label">${bin.days} วัน</div>
+                        <div class="bar" style="height: ${px}px;"></div>
+                        <div class="range-label">${bin.range}</div>
+                    </div>
+                `;
+            }).join('');
+        }
 
-  return React.createElement('div', { className: 'modal-overlay', onClick: onClose, role: 'dialog', 'aria-modal': 'true' },
-    React.createElement('div', { className: 'modal-content', onClick: (e) => e.stopPropagation() },
-      React.createElement('h3', { className: 'modal-title' }, scenario.title),
-      React.createElement('div', { className: 'modal-body' },
-        React.createElement('p', null, React.createElement('span', { className: 'font-semibold' }, 'เป้าหมาย:'), ` ${scenario.target}${/[0-9]/.test(scenario.target) ? ' ฟอง/ชม.' : ''}`),
-        React.createElement('p', null, React.createElement('span', { className: 'font-semibold' }, 'เงื่อนไข:'), ` ${scenario.condition}`)
-      ),
-      scenario.evidence && scenario.evidence !== '—' && React.createElement('p', { style: { fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' } },
-        React.createElement('span', { className: 'font-semibold' }, 'หลักฐานจากข้อมูล:'), ` ${scenario.evidence}`
-      ),
-      React.createElement('ul', { className: 'modal-details-list' },
-        ...scenario.details.map((t, i) => React.createElement('li', { key: i }, t))
-      ),
-      React.createElement('div', { className: 'modal-footer' },
-        React.createElement('button', { className: 'modal-close-button', onClick: onClose }, 'ปิด')
-      )
-    )
-  );
-}
+        function renderTables() {
+            const statsTable = document.getElementById('basic-stats-table');
+            statsTable.innerHTML = `
+                <thead><tr><th>สถิติ</th><th class="text-right">ค่า</th></tr></thead>
+                <tbody>${basicStats.map(row => `<tr><td>${row.k}</td><td class="text-right">${row.v}</td></tr>`).join('')}</tbody>`;
 
-export default function EggGradingInfographic() {
-  const [selected, setSelected] = useState(null);
+            const impactTable = document.getElementById('loss-impact-table');
+            impactTable.innerHTML = `
+                <thead><tr><th>Loss Time/วัน</th><th class="text-center">Performance เฉลี่ย</th><th class="text-center">ผลผลิต (ฟอง/ชม.)</th></tr></thead>
+                <tbody>${lossImpact.map(row => `<tr><td>${row.range}</td><td class="text-center">${row.perf}</td><td class="text-center">${row.production}</td></tr>`).join('')}</tbody>`;
 
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') setSelected(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+            const causesTable = document.getElementById('loss-causes-table');
+            causesTable.innerHTML = `
+                <thead><tr><th>สาเหตุ</th><th class="text-center">ความถี่</th><th class="text-center">% ของ Loss</th></tr></thead>
+                <tbody>${lossCauses.map(row => `<tr><td>${row.cause}</td><td class="text-center">${row.freq}</td><td class="text-center">${row.percent}</td></tr>`).join('')}</tbody>`;
+        }
+        
+        function renderScenarios() {
+            const table = document.getElementById('scenario-table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Scenario</th><th class="text-center">Target (ฟอง/ชม.)</th>
+                        <th>เงื่อนไข</th><th class="text-center">ความเสี่ยง</th><th>การกระทำ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${scenarios.map((s, i) => `
+                        <tr data-index="${i}" class="${s.title.startsWith('Base Case') ? 'base-case-row' : ''}">
+                            <td>${s.title}</td><td class="text-center">${s.target}</td>
+                            <td>${s.condition}</td><td class="text-center">${s.risk}</td>
+                            <td>${s.action}</td>
+                        </tr>`).join('')}
+                </tbody>`;
+        }
 
-  return React.createElement('div', { className: 'infographic-container' },
-    React.createElement(EmbeddedStyles, null),
-    React.createElement('header', { className: 'infographic-header' },
-      React.createElement('h1', { className: 'header-title' }, 'Best Case Scenario: Egg Grading'),
-      React.createElement('p', { className: 'header-subtitle' }, 'วิเคราะห์และนำเสนอเป้าหมาย Base Case ที่ 36,000 ฟอง/ชั่วโมง'),
-      React.createElement('div', { className: 'header-meta' },
-        React.createElement('span', { className: 'font-semibold' }, 'ช่วงข้อมูล:'), ` ${META.period} (${META.totalDays} วัน) | `,
-        React.createElement('span', { className: 'font-semibold' }, 'เครื่องจักร:'), ` ${META.machine}`
-      )
-    ),
-    React.createElement('main', { className: 'infographic-main' },
-      React.createElement('div', { className: 'main-content-wrapper' },
-        React.createElement('section', { className: 'grid-container grid-cols-4' },
-          ...kpiSummary.map((it, idx) => React.createElement('div', { key: idx, className: `card kpi-card ${idx === 0 ? 'kpi-card-base' : ''}` },
-            React.createElement('div', { className: 'kpi-label' }, it.label),
-            React.createElement('div', { className: `kpi-value ${idx === 0 ? 'kpi-value-base' : 'kpi-value-other'}` }, it.value),
-            React.createElement('div', { className: 'kpi-desc' }, it.description)
-          ))
-        ),
-        React.createElement('div', { className: 'grid-container grid-cols-5' },
-          React.createElement('section', { className: 'card grid-span-2' },
-            React.createElement('h2', { className: 'section-title' }, 'ทำไมต้อง 36,000 ฟอง/ชั่วโมง?'),
-            React.createElement('ul', { className: 'reasons-list' },
-              ...baseCaseReasons.map((r, i) => React.createElement('li', { key: i }, r))
-            )
-          ),
-          React.createElement('section', { className: 'card grid-span-3' },
-            React.createElement('h2', { className: 'section-title', style: { marginBottom: '0.25rem' } }, 'การกระจายผลผลิต (Histogram)'),
-            React.createElement('p', { style: { fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' } }, 'ช่วงที่เกิดบ่อยสุดคือ 35k–37k สนับสนุน Base Case 36k'),
-            React.createElement('div', { className: 'histogram-plot' },
-              ...(() => {
-                const max = Math.max(...histogram.map(h => h.days), 1);
-                return histogram.map((b, i) => {
-                  const barPx = computeBarPx(b.days, max);
-                  const isPeak = b.days === 49;
-                  return React.createElement('div', { key: i, className: 'histogram-bar-wrapper' },
-                    React.createElement('div', { className: 'histogram-bar-label' }, b.days, React.createElement('span', { style: { fontWeight: 400 } }, ' วัน')),
-                    React.createElement('div', { className: 'histogram-bar', style: { height: `${barPx}px`, background: isPeak ? BRAND.seaGreen : BRAND.blue }, title: `${b.range}: ${b.days} วัน` }),
-                    React.createElement('div', { className: 'histogram-range-label' }, b.range)
-                  );
-                });
-              })()
-            )
-          )
-        ),
-        React.createElement('div', { className: 'grid-container grid-cols-2' },
-          React.createElement('section', { className: 'card' },
-            React.createElement('h2', { className: 'section-title' }, 'ค่าสถิติพื้นฐาน (ฟอง/ชั่วโมง)'),
-            React.createElement('table', { className: 'data-table' },
-              React.createElement('tbody', null,
-                ...basicStats.map((r, i) => React.createElement('tr', { key: i },
-                  React.createElement('td', { style: { color: '#475569' } }, r.k),
-                  React.createElement('td', { className: 'text-right', style: { fontWeight: 700 } }, r.v)
-                ))
-              )
-            ),
-            React.createElement('div', { className: 'table-interpretation' },
-              React.createElement('p', null, React.createElement('span', { className: 'font-semibold' }, 'การตีความ:'), ' Median (35,432) สะท้อน "วันปกติ" ที่สุด Base Case 36,000 จึงเป็นเป้าหมายที่ท้าทายแต่สมเหตุสมผล')
-            )
-          ),
-          React.createElement('section', { className: 'card' },
-            React.createElement('h2', { className: 'section-title' }, 'ผลกระทบของ Loss Time'),
-            React.createElement('table', { className: 'data-table' },
-              React.createElement('thead', null, React.createElement('tr', null,
-                React.createElement('th', null, 'Loss Time/วัน'),
-                React.createElement('th', { className: 'text-center' }, 'Perf. เฉลี่ย'),
-                React.createElement('th', { className: 'text-center' }, 'ผลผลิต (ฟอง/ชม.)')
-              )),
-              React.createElement('tbody', null,
-                ...lossImpact.map((r, i) => React.createElement('tr', { key: i },
-                  React.createElement('td', null, r.range),
-                  React.createElement('td', { className: 'text-center', style: { color: '#475569' } }, r.perf),
-                  React.createElement('td', { className: 'text-center', style: { fontWeight: 700 } }, r.production)
-                ))
-              )
-            ),
-            React.createElement('p', { className: 'table-interpretation' }, React.createElement('span', { className: 'font-semibold' }, 'สรุป:'), ' ทุก 15 นาทีของ Loss Time จะลด Performance ลงประมาณ 2%')
-          )
-        ),
-        React.createElement('section', { className: 'card' },
-          React.createElement('h2', { className: 'section-title' }, 'Scenarios & คำแนะนำ'),
-          React.createElement('div', { style: { overflowX: 'auto' } },
-            React.createElement('table', { className: 'data-table scenario-table' },
-              React.createElement('thead', null, React.createElement('tr', null,
-                React.createElement('th', null, 'Scenario'),
-                React.createElement('th', { className: 'text-center' }, 'Target (ฟอง/ชม.)'),
-                React.createElement('th', null, 'เงื่อนไข'),
-                React.createElement('th', { className: 'text-center' }, 'ความเสี่ยง'),
-                React.createElement('th', null, 'การกระทำ')
-              )),
-              React.createElement('tbody', null,
-                ...scenarios.map((s, i) => React.createElement('tr', { key: i, onClick: () => setSelected(s), className: s.title.startsWith('Base Case') ? 'scenario-table-base-case' : '' },
-                  React.createElement('td', null, s.title),
-                  React.createElement('td', { className: 'text-center' }, s.target),
-                  React.createElement('td', null, s.condition),
-                  React.createElement('td', { className: 'text-center' }, s.risk),
-                  React.createElement('td', null, s.action)
-                ))
-              )
-            )
-          ),
-          React.createElement('p', { style: { fontSize: '0.875rem', color: '#475569', marginTop: '1rem', textAlign: 'center' } }, 'คลิกที่แถวเพื่อดูรายละเอียดเพิ่มเติม')
-        )
-      )
-    ),
-    selected && React.createElement(ScenarioModal, { scenario: selected, onClose: () => setSelected(null) })
-  );
-}
+        // --- MODAL LOGIC ---
+        const modal = document.getElementById('scenario-modal');
+        function showModal(scenario) {
+            document.getElementById('modal-title').textContent = scenario.title;
+            document.getElementById('modal-body').textContent = `เป้าหมาย: ${scenario.target}${/[0-9]/.test(scenario.target)? ' ฟอง/ชม.' : ''} · เงื่อนไข: ${scenario.condition}`;
+            const evidenceEl = document.getElementById('modal-evidence');
+            if(scenario.evidence && scenario.evidence !== '—') {
+                evidenceEl.textContent = `หลักฐานจากข้อมูล: ${scenario.evidence}`;
+                evidenceEl.style.display = 'block';
+            } else {
+                evidenceEl.style.display = 'none';
+            }
+            document.getElementById('modal-details-list').innerHTML = scenario.details.map(d => `<li>${d}</li>`).join('');
+            modal.style.display = 'flex';
+        }
+        function hideModal() {
+            modal.style.display = 'none';
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHeader();
+            renderKPIs();
+            renderBaseCaseReasons();
+            renderHistogram();
+            renderTables();
+            renderScenarios();
+
+            // Event Listeners for Modal
+            document.getElementById('scenario-table').addEventListener('click', (e) => {
+                const row = e.target.closest('tr');
+                if (row && row.dataset.index) {
+                    const scenario = scenarios[parseInt(row.dataset.index, 10)];
+                    showModal(scenario);
+                }
+            });
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal || e.target.id === 'modal-close-btn') {
+                    hideModal();
+                }
+            });
+             window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') hideModal();
+            });
+        });
+    </script>
+</body>
+</html>
 
