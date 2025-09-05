@@ -1,6 +1,6 @@
 // Egg Grading — Best Case Scenario (Interactive Web Infographic)
-// Converted to Standalone Component with Embedded CSS for Looker Studio compatibility.
-// No external libraries or scripts needed for styling.
+// Converted to Standalone Component with Embedded CSS and pure React.createElement calls.
+// This version is compatible with environments that do not have a JSX transpiler, like Looker Studio.
 
 import React, { useState, useEffect } from 'react';
 
@@ -50,11 +50,9 @@ function computeBarPx(days, max) {
   return Math.round(ratio * BAR_MAX_PX) + BAR_MIN_PX;
 }
 
-// ===== NEW: Embedded CSS Styles =====
-// This component injects a <style> block into the DOM.
-// All styling is self-contained here, removing the need for external CSS files or CDNs.
-const EmbeddedStyles = () => (
-  <style>{`
+// ===== Embedded CSS Styles Component =====
+const EmbeddedStyles = () => {
+    return React.createElement('style', null, `
     /* General Layout */
     .infographic-container { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #1e293b; background-color: #f8fafc; }
     .infographic-header { background-color: white; padding: 2rem; border-bottom: 1px solid #e2e8f0; }
@@ -127,32 +125,31 @@ const EmbeddedStyles = () => (
     .modal-footer { text-align: right; margin-top: 1.5rem; }
     .modal-close-button { padding: 0.5rem 1.5rem; border: none; cursor: pointer; border-radius: 0.5rem; background-color: #e2e8f0; color: #1e293b; font-weight: 600; transition: background-color 0.2s; }
     .modal-close-button:hover { background-color: #cbd5e1; }
-  `}</style>
-);
+  `);
+};
 
-// ===== COMPONENTS (JSX updated to use new CSS classes) =====
+// ===== COMPONENTS (Converted to React.createElement) =====
 
 function ScenarioModal({ scenario, onClose }) {
   if (!scenario) return null;
-  return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h3 className="modal-title">{scenario.title}</h3>
-        <div className="modal-body">
-          <p><span className="font-semibold">เป้าหมาย:</span> {scenario.target}{/[0-9]/.test(scenario.target) ? ' ฟอง/ชม.' : ''}</p>
-          <p><span className="font-semibold">เงื่อนไข:</span> {scenario.condition}</p>
-        </div>
-        {scenario.evidence && scenario.evidence !== '—' && <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' }}>
-          <span className="font-semibold">หลักฐานจากข้อมูล:</span> {scenario.evidence}
-        </p>}
-        <ul className="modal-details-list">
-          {scenario.details.map((t, i) => (<li key={i}>{t}</li>))}
-        </ul>
-        <div className="modal-footer">
-          <button className="modal-close-button" onClick={onClose}>ปิด</button>
-        </div>
-      </div>
-    </div>
+
+  return React.createElement('div', { className: 'modal-overlay', onClick: onClose, role: 'dialog', 'aria-modal': 'true' },
+    React.createElement('div', { className: 'modal-content', onClick: (e) => e.stopPropagation() },
+      React.createElement('h3', { className: 'modal-title' }, scenario.title),
+      React.createElement('div', { className: 'modal-body' },
+        React.createElement('p', null, React.createElement('span', { className: 'font-semibold' }, 'เป้าหมาย:'), ` ${scenario.target}${/[0-9]/.test(scenario.target) ? ' ฟอง/ชม.' : ''}`),
+        React.createElement('p', null, React.createElement('span', { className: 'font-semibold' }, 'เงื่อนไข:'), ` ${scenario.condition}`)
+      ),
+      scenario.evidence && scenario.evidence !== '—' && React.createElement('p', { style: { fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' } },
+        React.createElement('span', { className: 'font-semibold' }, 'หลักฐานจากข้อมูล:'), ` ${scenario.evidence}`
+      ),
+      React.createElement('ul', { className: 'modal-details-list' },
+        ...scenario.details.map((t, i) => React.createElement('li', { key: i }, t))
+      ),
+      React.createElement('div', { className: 'modal-footer' },
+        React.createElement('button', { className: 'modal-close-button', onClick: onClose }, 'ปิด')
+      )
+    )
   );
 }
 
@@ -165,117 +162,112 @@ export default function EggGradingInfographic() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  return (
-    <div className="infographic-container">
-      <EmbeddedStyles /> {/* <-- Styles are injected here! */}
-      
-      <header className="infographic-header">
-        <h1 className="header-title">Best Case Scenario: Egg Grading</h1>
-        <p className="header-subtitle">วิเคราะห์และนำเสนอเป้าหมาย Base Case ที่ 36,000 ฟอง/ชั่วโมง</p>
-        <div className="header-meta">
-          <span className="font-semibold">ช่วงข้อมูล:</span> {META.period} ({META.totalDays} วัน) | <span className="font-semibold">เครื่องจักร:</span> {META.machine}
-        </div>
-      </header>
-
-      <main className="infographic-main">
-        <div className="main-content-wrapper">
-          <section className="grid-container grid-cols-4">
-            {kpiSummary.map((it, idx) => (
-              <div key={idx} className={`card kpi-card ${idx === 0 ? 'kpi-card-base' : ''}`}>
-                <div className="kpi-label">{it.label}</div>
-                <div className={`kpi-value ${idx === 0 ? 'kpi-value-base' : 'kpi-value-other'}`}>{it.value}</div>
-                <div className="kpi-desc">{it.description}</div>
-              </div>
-            ))}
-          </section>
-
-          <div className="grid-container grid-cols-5">
-            <section className="card grid-span-2">
-              <h2 className="section-title">ทำไมต้อง 36,000 ฟอง/ชั่วโมง?</h2>
-              <ul className="reasons-list">
-                {baseCaseReasons.map((r, i) => (<li key={i}>{r}</li>))}
-              </ul>
-            </section>
-
-            <section className="card grid-span-3">
-              <h2 className="section-title" style={{marginBottom: '0.25rem'}}>การกระจายผลผลิต (Histogram)</h2>
-              <p style={{fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem'}}>ช่วงที่เกิดบ่อยสุดคือ 35k–37k สนับสนุน Base Case 36k</p>
-              <div className="histogram-plot">
-                {(() => {
-                  const max = Math.max(...histogram.map(h => h.days), 1);
-                  return histogram.map((b, i) => {
-                    const barPx = computeBarPx(b.days, max);
-                    const isPeak = b.days === 49;
-                    return (
-                      <div key={i} className="histogram-bar-wrapper">
-                        <div className="histogram-bar-label">{b.days}<span style={{fontWeight: 400}}> วัน</span></div>
-                        <div
-                          className="histogram-bar"
-                          style={{ height: `${barPx}px`, background: isPeak ? BRAND.seaGreen : BRAND.blue }}
-                          title={`${b.range}: ${b.days} วัน`}
-                        />
-                        <div className="histogram-range-label">{b.range}</div>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            </section>
-          </div>
-
-          <div className="grid-container grid-cols-2">
-            <section className="card">
-              <h2 className="section-title">ค่าสถิติพื้นฐาน (ฟอง/ชั่วโมง)</h2>
-              <table className="data-table">
-                <tbody>
-                  {basicStats.map((r, i) => (
-                    <tr key={i}>
-                      <td style={{color: '#475569'}}>{r.k}</td>
-                      <td className="text-right" style={{fontWeight: 700}}>{r.v}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="table-interpretation">
-                <p><span className="font-semibold">การตีความ:</span> Median (35,432) สะท้อน "วันปกติ" ที่สุด Base Case 36,000 จึงเป็นเป้าหมายที่ท้าทายแต่สมเหตุสมผล</p>
-              </div>
-            </section>
-
-            <section className="card">
-              <h2 className="section-title">ผลกระทบของ Loss Time</h2>
-              <table className="data-table">
-                <thead><tr><th>Loss Time/วัน</th><th className="text-center">Perf. เฉลี่ย</th><th className="text-center">ผลผลิต (ฟอง/ชม.)</th></tr></thead>
-                <tbody>
-                  {lossImpact.map((r, i) => (
-                    <tr key={i}><td>{r.range}</td><td className="text-center" style={{color: '#475569'}}>{r.perf}</td><td className="text-center" style={{fontWeight: 700}}>{r.production}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="table-interpretation"><span className="font-semibold">สรุป:</span> ทุก 15 นาทีของ Loss Time จะลด Performance ลงประมาณ 2%</p>
-            </section>
-          </div>
-
-          <section className="card">
-            <h2 className="section-title">Scenarios & คำแนะนำ</h2>
-            <div style={{overflowX: 'auto'}}>
-              <table className="data-table scenario-table">
-                <thead><tr><th>Scenario</th><th className="text-center">Target (ฟอง/ชม.)</th><th>เงื่อนไข</th><th className="text-center">ความเสี่ยง</th><th>การกระทำ</th></tr></thead>
-                <tbody>
-                  {scenarios.map((s, i) => (
-                    <tr key={i} onClick={() => setSelected(s)} className={s.title.startsWith('Base Case') ? 'scenario-table-base-case' : ''}>
-                      <td>{s.title}</td><td className="text-center">{s.target}</td><td>{s.condition}</td><td className="text-center">{s.risk}</td><td>{s.action}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p style={{fontSize: '0.875rem', color: '#475569', marginTop: '1rem', textAlign: 'center'}}>คลิกที่แถวเพื่อดูรายละเอียดเพิ่มเติม</p>
-          </section>
-        </div>
-      </main>
-
-      {selected && <ScenarioModal scenario={selected} onClose={() => setSelected(null)} />}
-    </div>
+  return React.createElement('div', { className: 'infographic-container' },
+    React.createElement(EmbeddedStyles, null),
+    React.createElement('header', { className: 'infographic-header' },
+      React.createElement('h1', { className: 'header-title' }, 'Best Case Scenario: Egg Grading'),
+      React.createElement('p', { className: 'header-subtitle' }, 'วิเคราะห์และนำเสนอเป้าหมาย Base Case ที่ 36,000 ฟอง/ชั่วโมง'),
+      React.createElement('div', { className: 'header-meta' },
+        React.createElement('span', { className: 'font-semibold' }, 'ช่วงข้อมูล:'), ` ${META.period} (${META.totalDays} วัน) | `,
+        React.createElement('span', { className: 'font-semibold' }, 'เครื่องจักร:'), ` ${META.machine}`
+      )
+    ),
+    React.createElement('main', { className: 'infographic-main' },
+      React.createElement('div', { className: 'main-content-wrapper' },
+        React.createElement('section', { className: 'grid-container grid-cols-4' },
+          ...kpiSummary.map((it, idx) => React.createElement('div', { key: idx, className: `card kpi-card ${idx === 0 ? 'kpi-card-base' : ''}` },
+            React.createElement('div', { className: 'kpi-label' }, it.label),
+            React.createElement('div', { className: `kpi-value ${idx === 0 ? 'kpi-value-base' : 'kpi-value-other'}` }, it.value),
+            React.createElement('div', { className: 'kpi-desc' }, it.description)
+          ))
+        ),
+        React.createElement('div', { className: 'grid-container grid-cols-5' },
+          React.createElement('section', { className: 'card grid-span-2' },
+            React.createElement('h2', { className: 'section-title' }, 'ทำไมต้อง 36,000 ฟอง/ชั่วโมง?'),
+            React.createElement('ul', { className: 'reasons-list' },
+              ...baseCaseReasons.map((r, i) => React.createElement('li', { key: i }, r))
+            )
+          ),
+          React.createElement('section', { className: 'card grid-span-3' },
+            React.createElement('h2', { className: 'section-title', style: { marginBottom: '0.25rem' } }, 'การกระจายผลผลิต (Histogram)'),
+            React.createElement('p', { style: { fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' } }, 'ช่วงที่เกิดบ่อยสุดคือ 35k–37k สนับสนุน Base Case 36k'),
+            React.createElement('div', { className: 'histogram-plot' },
+              ...(() => {
+                const max = Math.max(...histogram.map(h => h.days), 1);
+                return histogram.map((b, i) => {
+                  const barPx = computeBarPx(b.days, max);
+                  const isPeak = b.days === 49;
+                  return React.createElement('div', { key: i, className: 'histogram-bar-wrapper' },
+                    React.createElement('div', { className: 'histogram-bar-label' }, b.days, React.createElement('span', { style: { fontWeight: 400 } }, ' วัน')),
+                    React.createElement('div', { className: 'histogram-bar', style: { height: `${barPx}px`, background: isPeak ? BRAND.seaGreen : BRAND.blue }, title: `${b.range}: ${b.days} วัน` }),
+                    React.createElement('div', { className: 'histogram-range-label' }, b.range)
+                  );
+                });
+              })()
+            )
+          )
+        ),
+        React.createElement('div', { className: 'grid-container grid-cols-2' },
+          React.createElement('section', { className: 'card' },
+            React.createElement('h2', { className: 'section-title' }, 'ค่าสถิติพื้นฐาน (ฟอง/ชั่วโมง)'),
+            React.createElement('table', { className: 'data-table' },
+              React.createElement('tbody', null,
+                ...basicStats.map((r, i) => React.createElement('tr', { key: i },
+                  React.createElement('td', { style: { color: '#475569' } }, r.k),
+                  React.createElement('td', { className: 'text-right', style: { fontWeight: 700 } }, r.v)
+                ))
+              )
+            ),
+            React.createElement('div', { className: 'table-interpretation' },
+              React.createElement('p', null, React.createElement('span', { className: 'font-semibold' }, 'การตีความ:'), ' Median (35,432) สะท้อน "วันปกติ" ที่สุด Base Case 36,000 จึงเป็นเป้าหมายที่ท้าทายแต่สมเหตุสมผล')
+            )
+          ),
+          React.createElement('section', { className: 'card' },
+            React.createElement('h2', { className: 'section-title' }, 'ผลกระทบของ Loss Time'),
+            React.createElement('table', { className: 'data-table' },
+              React.createElement('thead', null, React.createElement('tr', null,
+                React.createElement('th', null, 'Loss Time/วัน'),
+                React.createElement('th', { className: 'text-center' }, 'Perf. เฉลี่ย'),
+                React.createElement('th', { className: 'text-center' }, 'ผลผลิต (ฟอง/ชม.)')
+              )),
+              React.createElement('tbody', null,
+                ...lossImpact.map((r, i) => React.createElement('tr', { key: i },
+                  React.createElement('td', null, r.range),
+                  React.createElement('td', { className: 'text-center', style: { color: '#475569' } }, r.perf),
+                  React.createElement('td', { className: 'text-center', style: { fontWeight: 700 } }, r.production)
+                ))
+              )
+            ),
+            React.createElement('p', { className: 'table-interpretation' }, React.createElement('span', { className: 'font-semibold' }, 'สรุป:'), ' ทุก 15 นาทีของ Loss Time จะลด Performance ลงประมาณ 2%')
+          )
+        ),
+        React.createElement('section', { className: 'card' },
+          React.createElement('h2', { className: 'section-title' }, 'Scenarios & คำแนะนำ'),
+          React.createElement('div', { style: { overflowX: 'auto' } },
+            React.createElement('table', { className: 'data-table scenario-table' },
+              React.createElement('thead', null, React.createElement('tr', null,
+                React.createElement('th', null, 'Scenario'),
+                React.createElement('th', { className: 'text-center' }, 'Target (ฟอง/ชม.)'),
+                React.createElement('th', null, 'เงื่อนไข'),
+                React.createElement('th', { className: 'text-center' }, 'ความเสี่ยง'),
+                React.createElement('th', null, 'การกระทำ')
+              )),
+              React.createElement('tbody', null,
+                ...scenarios.map((s, i) => React.createElement('tr', { key: i, onClick: () => setSelected(s), className: s.title.startsWith('Base Case') ? 'scenario-table-base-case' : '' },
+                  React.createElement('td', null, s.title),
+                  React.createElement('td', { className: 'text-center' }, s.target),
+                  React.createElement('td', null, s.condition),
+                  React.createElement('td', { className: 'text-center' }, s.risk),
+                  React.createElement('td', null, s.action)
+                ))
+              )
+            )
+          ),
+          React.createElement('p', { style: { fontSize: '0.875rem', color: '#475569', marginTop: '1rem', textAlign: 'center' } }, 'คลิกที่แถวเพื่อดูรายละเอียดเพิ่มเติม')
+        )
+      )
+    ),
+    selected && React.createElement(ScenarioModal, { scenario: selected, onClose: () => setSelected(null) })
   );
 }
 
