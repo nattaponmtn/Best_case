@@ -134,48 +134,6 @@
         .range-label { font-size: 0.75rem; color: var(--slate-800); margin-top: 0.25rem; }
         .histogram-footer-text { font-size: 0.875rem; color: var(--slate-600); margin-top: 0.5rem; }
 
-        /* Scenario Table */
-        #scenario-table tbody tr { cursor: pointer; transition: background-color 0.2s; }
-        #scenario-table tbody tr:hover { background-color: #eff6ff; }
-        .base-case-row { background-color: var(--slate-100); font-weight: 700; }
-
-        /* Modal */
-        .modal {
-            position: fixed;
-            inset: 0;
-            z-index: 50;
-            display: none; /* Hidden by default */
-            align-items: center;
-            justify-content: center;
-            background-color: rgba(0,0,0,0.6);
-            padding: 1rem;
-            animation: fadeIn 0.3s ease;
-        }
-        .modal.is-visible { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal-content {
-            background-color: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            max-width: 500px;
-            width: 100%;
-            padding: 1.5rem;
-            animation: scaleUp 0.3s ease;
-        }
-        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-title { margin-top: 0; font-size: 1.125rem; font-weight: 600; color: var(--brand-blue); }
-        .modal-body { font-size: 0.875rem; color: var(--slate-600); }
-        .modal-button {
-            margin-top: 1rem;
-            padding: 0.5rem 1.25rem;
-            border-radius: 0.375rem;
-            border: none;
-            background-color: var(--slate-200);
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        .modal-button:hover { background-color: #d1d5db; }
     </style>
 </head>
 <body>
@@ -226,28 +184,8 @@
                     </div>
                 </section>
             </div>
-            
-            <section style="margin-top: 1rem;">
-                <h2 class="section-title">Scenario & คำแนะนำ</h2>
-                <div class="table-container">
-                    <table id="scenario-table" class="data-table"></table>
-                </div>
-                <p style="font-size: 0.875rem; color: var(--slate-600); margin-top: 0.5rem; text-align: center;">คลิกแถวเพื่อดูรายละเอียดของสถานการณ์นั้น ๆ</p>
-            </section>
         </main>
     </div>
-
-    <!-- Modal -->
-    <div id="scenario-modal" class="modal">
-        <div class="modal-content">
-            <h3 id="modal-title" class="modal-title"></h3>
-            <p id="modal-body" class="modal-body"></p>
-            <p id="modal-evidence" style="font-size: 0.75rem; color: var(--slate-500); margin-top: 0.25rem;"></p>
-            <ul id="modal-details-list" class="styled-list" style="margin-top: 0.75rem;"></ul>
-            <button id="modal-close-btn" class="modal-button">ปิด</button>
-        </div>
-    </div>
-
 
     <script>
         // --- DATA ---
@@ -278,12 +216,6 @@
             { cause: 'ปัญหาเลน 3,4,7', freq: '18 ครั้ง', percent: '14.3%' },
             { cause: 'น็อต/Bucket หลุด', freq: '9 ครั้ง', percent: '7.1%' },
         ];
-        const scenarios = [
-            { title: 'Base Case (มาตรฐาน)', target: '36,000', condition: 'เล้าไข่ครบ • Loss < 20 นาที', risk: 'ต่ำ', action: 'รักษามาตรฐาน', evidence: '≥36k: 79/184 วัน (43%)', details: ['ใช้เป็นเป้าหมายหลักในวันทำงานปกติ', 'ทำได้แล้ว 43% ของวัน (79 จาก 184 วัน)', 'ลด Loss Time ต่อเนื่อง'] },
-            { title: 'ลดเล้าใหญ่ 1 เล้า', target: 'ลดลงตาม Supply', condition: 'ปริมาณไข่ลด (ปลดเล้าใหญ่)', risk: 'กลาง', action: 'ปรับเป้าหมายชั่วคราว', evidence: '—', details: ['สะท้อนข้อจำกัดด้าน Supply ชั่วคราว', 'วางแผนคืนสู่ Base Case ทันทีที่ Supply กลับมา'] },
-            { title: 'Loss > 30 นาที', target: '<34,000', condition: 'ขาดการบำรุง/เสียบ่อย', risk: 'สูง', action: 'บำรุง/แก้ระบบขนถาด', evidence: '—', details: ['ทำ Root-cause + PM เลนที่มีปัญหาซ้ำ', 'ย่น MTTR เพื่อลด Downtime'] },
-            { title: 'Excellent Day', target: '≥38,400', condition: 'No Loss • Input เต็ม', risk: 'โอกาส', action: 'ผลักดันศักยภาพ', evidence: '—', details: ['บันทึกวิธีปฏิบัติ/กำลังคนในวันที่ดีพิเศษ', 'ย้ำสภาพแวดล้อมที่เอื้อต่อ Zero Loss'] },
-        ];
         const baseCaseReasons = [
             'เป็นเลขกลม จำง่าย สื่อสารสะดวก', 'อยู่ระหว่าง Median (35,432) และ Mean+0.5×SD (~36,200)',
             'ปัจจุบันทำได้แล้ว 43% ของวัน (79/184 วัน)', 'ยังมีช่องให้พัฒนาเพิ่มขึ้นอย่างมีเหตุผล',
@@ -291,8 +223,8 @@
 
         // --- RENDER FUNCTIONS ---
         function renderHeader() {
-            document.getElementById('header-title').textContent = 'Best Case Scenario — Performance';
-            document.getElementById('header-subtitle').textContent = 'Base Case ที่แนะนำ (36,000 ฟอง/ชม.) และเหตุผล';
+            document.getElementById('header-title').textContent = 'นำเสนอ Best Case Scenario — การคัดไข่';
+            document.getElementById('header-subtitle').textContent = 'อธิบายตัวเลข Base Case ที่แนะนำ (36,000 ฟอง/ชม.) และเหตุผลเชิงข้อมูล';
             document.getElementById('header-meta').textContent = `ช่วงข้อมูล: ${META.period} • ${META.totalDays} วัน • เครื่อง: ${META.machine}`;
         }
 
@@ -347,44 +279,6 @@
                 <tbody>${lossCauses.map(row => `<tr><td>${row.cause}</td><td class="text-center">${row.freq}</td><td class="text-center">${row.percent}</td></tr>`).join('')}</tbody>`;
         }
         
-        function renderScenarios() {
-            const table = document.getElementById('scenario-table');
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th>Scenario</th><th class="text-center">Target (ฟอง/ชม.)</th>
-                        <th>เงื่อนไข</th><th class="text-center">ความเสี่ยง</th><th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${scenarios.map((s, i) => `
-                        <tr data-index="${i}" class="${s.title.startsWith('Base Case') ? 'base-case-row' : ''}">
-                            <td>${s.title}</td><td class="text-center">${s.target}</td>
-                            <td>${s.condition}</td><td class="text-center">${s.risk}</td>
-                            <td>${s.action}</td>
-                        </tr>`).join('')}
-                </tbody>`;
-        }
-
-        // --- MODAL LOGIC ---
-        const modal = document.getElementById('scenario-modal');
-        function showModal(scenario) {
-            document.getElementById('modal-title').textContent = scenario.title;
-            document.getElementById('modal-body').textContent = `เป้าหมาย: ${scenario.target}${/[0-9]/.test(scenario.target)? ' ฟอง/ชม.' : ''} · เงื่อนไข: ${scenario.condition}`;
-            const evidenceEl = document.getElementById('modal-evidence');
-            if(scenario.evidence && scenario.evidence !== '—') {
-                evidenceEl.textContent = `หลักฐานจากข้อมูล: ${scenario.evidence}`;
-                evidenceEl.style.display = 'block';
-            } else {
-                evidenceEl.style.display = 'none';
-            }
-            document.getElementById('modal-details-list').innerHTML = scenario.details.map(d => `<li>${d}</li>`).join('');
-            modal.classList.add('is-visible');
-        }
-        function hideModal() {
-            modal.classList.remove('is-visible');
-        }
-
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             renderHeader();
@@ -392,27 +286,8 @@
             renderBaseCaseReasons();
             renderHistogram();
             renderTables();
-            renderScenarios();
-
-            // Event Listeners for Modal
-            document.getElementById('scenario-table').addEventListener('click', (e) => {
-                const row = e.target.closest('tr');
-                if (row && row.dataset.index) {
-                    const scenario = scenarios[parseInt(row.dataset.index, 10)];
-                    showModal(scenario);
-                }
-            });
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal || e.target.id === 'modal-close-btn') {
-                    hideModal();
-                }
-            });
-             window.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') hideModal();
-            });
         });
     </script>
 </body>
 </html>
-
 
